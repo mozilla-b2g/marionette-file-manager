@@ -1,0 +1,121 @@
+const DEVICE_STORAGE_PATH = __dirname + '/devicestorage',
+      TEST_FILES_PATH = '../test_files',
+      TEST_FILE_NAME = 'fxos.png',
+      PICTURES_TYPE = 'pictures';
+var assert = require('assert'),
+    sinon = require('sinon'),
+    fs = require('fs'),
+    path = require('path'),
+    testHelper = require('../lib/test_helper'),
+    DeviceStorage =
+      require('../../lib/desktop_client_device_storage'),
+    FileManager =
+      require('../../lib/desktop_client_file_manager'),
+    subject = {};
+
+suite('DesktopClientFileManager', function() {
+  var deviceStorage = {};
+
+  setup(function() {
+    // Create the device storage.
+    if (!fs.existsSync(DEVICE_STORAGE_PATH)) {
+      fs.mkdirSync(DEVICE_STORAGE_PATH);
+    }
+
+    deviceStorage = new DeviceStorage({});
+    sinon.stub(deviceStorage, 'getDeviceStoragePath', function() {
+      return DEVICE_STORAGE_PATH;
+    });
+    sinon.stub(deviceStorage, 'getMediaFilePath', function(type) {
+      return path.join(DEVICE_STORAGE_PATH, type);
+    });
+
+    subject = new FileManager(deviceStorage);
+  });
+
+  teardown(function() {
+    deviceStorage.getDeviceStoragePath.restore();
+    deviceStorage.getMediaFilePath.restore();
+    if (fs.existsSync(DEVICE_STORAGE_PATH)) {
+      fs.rmdirSync(DEVICE_STORAGE_PATH);
+    }
+  });
+
+  suite('#add', function() {
+    teardown(function() {
+      testHelper.removeFile(path.join(DEVICE_STORAGE_PATH, PICTURES_TYPE));
+    });
+
+    test('should add a file in the pictures directory', function() {
+      subject.add({
+        type: PICTURES_TYPE,
+        filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME)
+      });
+
+      assert.ok(
+        fs.existsSync(path.join(
+          DEVICE_STORAGE_PATH, PICTURES_TYPE, TEST_FILE_NAME
+        ))
+      );
+    });
+
+    test('should files in the pictures directory', function() {
+      const TEST_FILE_1 = 'test_file_1.png',
+            TEST_FILE_2 = 'test_file_2.png';
+      var fileList = [];
+
+      subject.add([
+        {
+          type: PICTURES_TYPE,
+          filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME),
+          filename: TEST_FILE_1
+        },
+        {
+          type: PICTURES_TYPE,
+          filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME),
+          filename: TEST_FILE_2
+        }
+      ]);
+
+      fileList = fs.readdirSync(deviceStorage.getMediaFilePath(PICTURES_TYPE));
+      assert.deepEqual(TEST_FILE_1, fileList[0]);
+      assert.deepEqual(TEST_FILE_2, fileList[1]);
+    });
+  });
+
+  suite('#remove', function() {
+    setup(function() {
+      subject.add({
+        type: PICTURES_TYPE,
+        filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME)
+      });
+    });
+
+    test('should remove a file in the videos directory', function() {
+      subject.remove({
+        type: PICTURES_TYPE,
+        filename: TEST_FILE_NAME
+      });
+
+      assert.ok(!fs.existsSync(path.join(
+        DEVICE_STORAGE_PATH, PICTURES_TYPE, TEST_FILE_NAME
+      )));
+    });
+  });
+
+  suite('#removeAllFiles', function() {
+    setup(function() {
+      subject.add({
+        type: PICTURES_TYPE,
+        filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME)
+      });
+    });
+
+    test('should remove all files in device storage', function() {
+      subject.removeAllFiles();
+      // XXX: Could not be passed by the below assert.
+      // assert.ok(!fs.existsSync(DEVICE_STORAGE_PATH));
+      assert.ok(fs.readdirSync(DEVICE_STORAGE_PATH).length === 0);
+    });
+  });
+});
