@@ -7,7 +7,7 @@ var fileManagerFactory = require('./lib/file_manager_factory'),
  *
  * @constructor
  * @param {Marionette.Client} client marionette client to use.
- * @param {Object} [options] setup the file manager.
+ * @param {Object} options setup the file manager.
  */
 function MarionetteFileManager(client, options) {
   var type = '';

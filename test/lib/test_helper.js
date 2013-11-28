@@ -21,8 +21,8 @@ var TestHelper = {
       }
 
       fileList.forEach(function(item) {
-        this.removeFile(filePath + '/' + item);
-      }.bind(this));
+        TestHelper.removeFile(filePath + '/' + item);
+      });
     } else {
       fs.unlinkSync(filePath);
       dirname = path.dirname(filePath);
