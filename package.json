@@ -7,7 +7,7 @@
   },
   "description": "A marionette plugin to manage(add, remove) files in device storage.",
   "main": "index.js",
-  "script": {
+  "scripts": {
     "test": "make"
   },
   "license": "Apache2",
