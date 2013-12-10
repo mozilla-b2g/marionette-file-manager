@@ -1,14 +1,17 @@
-const TEST_FILES_PATH = '../test_files',
-      TEXT_FILE_NAME = 'hello_world.json',
-      IMAGE_FILE_NAME = 'fxos.png',
-      PICTURES_TYPE = 'pictures',
-      TEXT_TYPE = 'text';
-
 var assert = require('assert'),
     fs = require('fs'),
     path = require('path'),
     testHelper = require('../lib/test_helper'),
     client = {};
+
+const TEST_FILES_PATH = '../test_files',
+      TEXT_FILE_NAME = 'hello_world.json',
+      IMAGE_FILE_NAME = 'fxos.png',
+      PICTURES_TYPE = 'pictures',
+      TEXT_TYPE = 'text',
+      DS_FILE_PATH = path.join(TEXT_TYPE, TEXT_FILE_NAME),
+      TEST_FILE_PATH =
+        path.join(__dirname, TEST_FILES_PATH, TEXT_FILE_NAME);
 
 suite('MarionetteFileManager', function() {
   var testFilePath =
@@ -40,10 +43,6 @@ suite('MarionetteFileManager', function() {
 
   suite('#add', function() {
     test('should get the file from device storage', function() {
-      const DS_FILE_PATH = path.join(TEXT_TYPE, TEXT_FILE_NAME),
-            TEST_FILE_PATH =
-              path.join(__dirname, TEST_FILES_PATH, TEXT_FILE_NAME);
-
       client.fileManager.add({
         type: TEXT_TYPE,
         filePath: path.join(__dirname, TEST_FILES_PATH, TEXT_FILE_NAME)
@@ -91,6 +90,23 @@ suite('MarionetteFileManager', function() {
         ['pictures'],
         function(error, value) {
           assert.ok(value.files.length === 0);
+        }
+      );
+    });
+
+    test('could add file after do removeAllFiles', function() {
+      client.fileManager.removeAllFiles();
+      client.fileManager.add({
+        type: TEXT_TYPE,
+        filePath: path.join(__dirname, TEST_FILES_PATH, TEXT_FILE_NAME)
+      });
+
+      client.executeAsyncScript(
+        getFileFromDeviceStorage,
+        [DS_FILE_PATH],
+        function(error, value) {
+          var expectedContent = fs.readFileSync(TEST_FILE_PATH).toString();
+          assert.deepEqual(value.file.toString(), expectedContent);
         }
       );
     });
