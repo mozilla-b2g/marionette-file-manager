@@ -78,8 +78,8 @@ suite('DesktopClientFileManager', function() {
       ]);
 
       fileList = fs.readdirSync(deviceStorage.getMediaFilePath(PICTURES_TYPE));
-      assert.deepEqual(TEST_FILE_1, fileList[0]);
-      assert.deepEqual(TEST_FILE_2, fileList[1]);
+      assert.ok(fileList.indexOf(TEST_FILE_1) !== -1);
+      assert.ok(fileList.indexOf(TEST_FILE_2) !== -1);
     });
   });
 
@@ -104,17 +104,23 @@ suite('DesktopClientFileManager', function() {
   });
 
   suite('#removeAllFiles', function() {
-    setup(function() {
+    test('should have device storage directory', function() {
+      subject.removeAllFiles();
+      assert.ok(fs.existsSync(DEVICE_STORAGE_PATH));
+    });
+
+    test('should work when no file in device storage', function() {
+      subject.removeAllFiles();
+      assert.ok(fs.readdirSync(DEVICE_STORAGE_PATH).length === 0);
+    });
+
+    test('should remove all files in device storage', function() {
       subject.add({
         type: PICTURES_TYPE,
         filePath: path.join(__dirname, TEST_FILES_PATH, TEST_FILE_NAME)
       });
-    });
 
-    test('should remove all files in device storage', function() {
       subject.removeAllFiles();
-      // XXX: Could not be passed by the below assert.
-      // assert.ok(!fs.existsSync(DEVICE_STORAGE_PATH));
       assert.ok(fs.readdirSync(DEVICE_STORAGE_PATH).length === 0);
     });
   });
